@@ -1,0 +1,10 @@
+## https://rust-lang.github.io/rustfmt/?version=master&search=
+
+max_width = 100
+fn_call_width = 80
+chain_width = 50
+brace_style = "PreferSameLine"
+fn_params_layout = "Compressed"
+use_small_heuristics = "Max"
+#imports_granularity = "Crate"
+where_single_line = true

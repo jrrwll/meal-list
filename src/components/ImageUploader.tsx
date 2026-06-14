@@ -1,152 +1,100 @@
-import { useCallback, useRef, useState } from 'react';
-import { message } from 'antd';
-import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
-import { PhotoSlider } from 'react-photo-view';
-import type { UploadFile } from 'antd/es/upload/interface';
-import { uploadFile } from '../services/api';
-import 'react-photo-view/dist/react-photo-view.css';
+import type { Component } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
+import { uploadFile } from '../api/file';
+import ImageViewer from './ImageViewer';
 
-const MAX_IMAGES = 9;
-
-interface ImageUploaderProps {
-  fileList: UploadFile[];
-  onChange: (fileList: UploadFile[]) => void;
+interface Props {
+  value: string[];
+  onChange: (v: string[]) => void;
+  max?: number;
 }
 
-export default function ImageUploader({ fileList, onChange }: ImageUploaderProps) {
-  const [photoVisible, setPhotoVisible] = useState(false);
-  const [photoIndex, setPhotoIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  // Keep a live ref to fileList so async upload loops see latest state.
-  const fileListRef = useRef(fileList);
-  fileListRef.current = fileList;
+const ImageUploader: Component<Props> = (props) => {
+  const max = () => props.max ?? 9;
+  const [uploading, setUploading] = createSignal(false);
+  const [viewerOpen, setViewerOpen] = createSignal(false);
+  const [viewerIdx, setViewerIdx] = createSignal(0);
+  let fileInput: HTMLInputElement | undefined;
 
-  const doneImages = fileList.filter((f) => f.status === 'done');
-  const sliderImages = doneImages.map((f) => ({
-    key: f.uid,
-    src: (f.response as string) || f.url!,
-  }));
-
-  const handlePreview = useCallback((index: number) => {
-    setPhotoIndex(index);
-    setPhotoVisible(true);
-  }, []);
-
-  const handleDelete = useCallback(
-    (index: number) => {
-      const file = doneImages[index];
-      onChange(fileListRef.current.filter((f) => f.uid !== file.uid));
-    },
-    [doneImages, onChange],
-  );
-
-  const handleFiles = async (files: File[]) => {
-    for (const file of files) {
-      if (fileListRef.current.length >= MAX_IMAGES) break;
-      if (!file.type.startsWith('image/')) {
-        message.error('只能上传图片文件');
-        continue;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        message.error('图片大小不能超过 10MB');
-        continue;
-      }
-      const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const pending: UploadFile = {
-        uid,
-        name: file.name,
-        status: 'uploading',
-      };
-      const afterAdd = [...fileListRef.current, pending];
-      fileListRef.current = afterAdd;
-      onChange(afterAdd);
-
-      try {
-        const url = await uploadFile(file);
-        const next = fileListRef.current
-          .filter((f) => f.uid !== uid)
-          .concat([{ uid, name: file.name, status: 'done', url, response: url }])
-          .slice(0, MAX_IMAGES);
-        fileListRef.current = next;
-        onChange(next);
-      } catch {
-        message.error(`${file.name} 上传失败`);
-        const next = fileListRef.current.filter((f) => f.uid !== uid);
-        fileListRef.current = next;
-        onChange(next);
-      }
+  const onPick = async (e: Event) => {
+    const target = e.currentTarget as HTMLInputElement;
+    const file = target.files?.[0];
+    target.value = '';
+    if (!file) return;
+    if (props.value.length >= max()) return;
+    setUploading(true);
+    try {
+      const url = await uploadFile(file);
+      props.onChange([...props.value, url]);
+    } catch (err) {
+      alert('上传失败：' + (err as Error).message);
+    } finally {
+      setUploading(false);
     }
+  };
+
+  const remove = (i: number) => {
+    props.onChange(props.value.filter((_, idx) => idx !== i));
   };
 
   return (
     <div>
-      <div className="image-uploader">
-        {doneImages.map((img, i) => (
-          <div
-            key={img.uid}
-            className="image-thumb-wrapper"
-            onClick={() => handlePreview(i)}
-          >
-            <img src={img.url} alt={img.name} className="image-thumb" />
-            <button
-              className="image-thumb-delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(i);
-              }}
-            >
-              <CloseOutlined />
-            </button>
-          </div>
-        ))}
-        {fileList.length < MAX_IMAGES && (
-          <>
-            <div
-              className="image-thumb-wrapper upload-placeholder"
-              onClick={() => inputRef.current?.click()}
-            >
-              <PlusOutlined style={{ fontSize: 24 }} />
-              <div style={{ marginTop: 4 }}>上传图片</div>
+      <div class="grid grid-cols-3 gap-2">
+        <For each={props.value}>
+          {(url, i) => (
+            <div class="relative aspect-square rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-700">
+              <img
+                src={url}
+                class="w-full h-full object-cover cursor-pointer"
+                onClick={() => {
+                  setViewerIdx(i());
+                  setViewerOpen(true);
+                }}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  remove(i());
+                }}
+                class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white text-xs flex items-center justify-center"
+              >
+                ✕
+              </button>
             </div>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              style={{ display: 'none' }}
-              onChange={async (e) => {
-                const files = Array.from(e.target.files || []);
-                e.target.value = '';
-                await handleFiles(files);
-              }}
-            />
-          </>
-        )}
+          )}
+        </For>
+        <Show when={props.value.length < max()}>
+          <button
+            type="button"
+            disabled={uploading()}
+            onClick={() => fileInput?.click()}
+            class="aspect-square rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-600 flex flex-col items-center justify-center text-neutral-400 active:bg-neutral-50 dark:active:bg-neutral-700"
+          >
+            <Show when={!uploading()} fallback={<span class="text-xs">上传中…</span>}>
+              <span class="text-2xl leading-none">+</span>
+              <span class="text-xs mt-1">
+                {props.value.length}/{max()}
+              </span>
+            </Show>
+          </button>
+        </Show>
       </div>
-
-      <PhotoSlider
-        images={sliderImages}
-        visible={photoVisible}
-        onClose={() => setPhotoVisible(false)}
-        index={photoIndex}
-        onIndexChange={setPhotoIndex}
-        bannerVisible={false}
-        speed={() => 0}
-        maskClassName="photo-mask"
-        overlayRender={({ index }) => (
-          <div className="photo-toolbar">
-            <button className="photo-back" onClick={() => setPhotoVisible(false)}>
-              ← 返回
-            </button>
-            <span className="photo-counter">
-              {index + 1}/{sliderImages.length}
-            </span>
-            <button className="photo-delete" onClick={() => handleDelete(index)}>
-              <CloseOutlined />
-            </button>
-          </div>
-        )}
+      <input
+        ref={fileInput}
+        type="file"
+        accept="image/*"
+        class="hidden"
+        onChange={onPick}
+      />
+      <ImageViewer
+        images={props.value}
+        index={viewerIdx()}
+        open={viewerOpen()}
+        onClose={() => setViewerOpen(false)}
       />
     </div>
   );
-}
+};
+
+export default ImageUploader;

@@ -1,0 +1,32 @@
+[package]
+name = "meal_list"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.52.3", features = ["rt-multi-thread", "macros", "time", "fs", "io-util"] }
+axum = { version = "0.8.9", features = ["default", "macros", "multipart"]}
+diesel = { version = "2.3.9", features = ["sqlite", "chrono"] }
+diesel-async = { version = "0.9.0", features = ["sqlite", "async-connection-wrapper"] }
+tower-http = { version = "0.6", features = ["cors", "fs"] }
+
+rexl = { path = "../../rexl/rexl", version = "0.0.5", features = ["serde"] }
+dotenvy = "0.15.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1.0.102"
+config = "0.15.23"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
+md-5 = "0.10"
+hex = "0.4"
+tracing = "0.1"
+backtrace = "0.3.76"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = "debuginfo"
+

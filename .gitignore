@@ -23,9 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
+# Python
 .env
-__pycache__
-api/.env
-api/meal-list.db
-api/workspace/
-api/images/
+__pycache__/
+meal-list.db
+workspace/
+images/
+
+# Rust
+target/
+
+# AI
+.codegraph/
+.claude/
