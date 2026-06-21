@@ -23,9 +23,7 @@ pub async fn insert_file(conn: &mut DbConnection, entity: &File) -> anyhow::Resu
 }
 
 pub async fn get_hosting_file(
-    conn: &mut DbConnection,
-    kind: &str,
-    file_id: &str,
+    conn: &mut DbConnection, kind: &str, file_id: &str,
 ) -> anyhow::Result<Option<HostingFile>> {
     let result = h::hosting_file
         .filter(h::kind.eq(kind).and(h::file_id.eq(file_id)))
@@ -36,8 +34,7 @@ pub async fn get_hosting_file(
 }
 
 pub async fn insert_hosting_file(
-    conn: &mut DbConnection,
-    entity: &HostingFile,
+    conn: &mut DbConnection, entity: &HostingFile,
 ) -> anyhow::Result<()> {
     diesel::insert_into(h::hosting_file)
         .values(entity)

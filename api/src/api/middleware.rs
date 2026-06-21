@@ -8,9 +8,7 @@ use axum::{
 use std::net::SocketAddr;
 
 pub async fn request_logger(
-    ConnectInfo(addr): ConnectInfo<SocketAddr>,
-    req: Request,
-    next: Next,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>, req: Request, next: Next,
 ) -> Response {
     let method = req.method().clone();
     let path = req.uri().path().to_string();

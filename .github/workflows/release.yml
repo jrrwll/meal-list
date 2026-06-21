@@ -37,10 +37,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev
 
-      - name: Install musl linker (linux musl targets)
-        if: contains(matrix.target, 'musl')
+      - name: Install zig
+        if: contains(matrix.target, 'aarch64') && runner.os == 'Linux'
+        uses: ziglang/action-setup@v1
+
+      - name: Build sqlite3 for aarch64 musl
+        if: contains(matrix.target, 'aarch64-unknown-linux-musl')
         run: |
-          sudo apt-get install -y musl-tools
+          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3460000.zip -o /tmp/sqlite.zip
+          unzip -q /tmp/sqlite.zip -d /tmp/sqlite
+          cd /tmp/sqlite/sqlite-amalgamation-3460000
+          zig cc -target aarch64-linux-musl -O2 -fPIC -c sqlite3.c -o sqlite3.o
+          ar rcs /tmp/libsqlite3.a sqlite3.o
+          echo "SQLITE3_LIB_DIR=/tmp" >> $GITHUB_ENV
+          echo "SQLITE3_INCLUDE_DIR=/tmp/sqlite/sqlite-amalgamation-3460000" >> $GITHUB_ENV
+
+      - name: Set zig as cross-compiler/linker (aarch64 musl)
+        if: contains(matrix.target, 'aarch64-unknown-linux-musl')
+        run: |
+          echo "CC_aarch64_unknown_linux_musl=zig cc -target aarch64-linux-musl" >> $GITHUB_ENV
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=zig cc -target aarch64-linux-musl" >> $GITHUB_ENV
 
       - name: Build
         run: |

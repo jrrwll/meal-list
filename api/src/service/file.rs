@@ -17,9 +17,7 @@ pub struct FileService;
 
 impl FileService {
     pub async fn upload_file(
-        state: &ApiState,
-        mut multipart: Multipart,
-        addr: SocketAddr,
+        state: &ApiState, mut multipart: Multipart, addr: SocketAddr,
     ) -> AppResult<String> {
         let mut filename: Option<String> = None;
         let mut data: Option<Vec<u8>> = None;
@@ -46,10 +44,7 @@ impl FileService {
         let data = data.ok_or_else(|| AppError::biz("unsupported file"))?;
         let size = data.len() as i64;
 
-        println!(
-            "[{}] POST /api/v1/upload file={} size={}",
-            addr, filename, size
-        );
+        println!("[{}] POST /api/v1/upload file={} size={}", addr, filename, size);
 
         let now_date_str = format_date_compact();
         let file_dir = format!("{}/{}", UPLOAD_TEMP_DIR, now_date_str);
@@ -101,10 +96,7 @@ impl FileService {
         Ok(url)
     }
 
-    pub async fn upload_hosting(
-        state: &ApiState,
-        param: HostingUploadParam,
-    ) -> AppResult<String> {
+    pub async fn upload_hosting(state: &ApiState, param: HostingUploadParam) -> AppResult<String> {
         let mut conn = state.get_db_connection().await?;
 
         // 1. check fingerprint: find file by md5 id
