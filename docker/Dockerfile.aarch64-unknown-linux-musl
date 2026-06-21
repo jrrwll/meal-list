@@ -1,0 +1,10 @@
+FROM ghcr.io/cross-rs/aarch64-unknown-linux-musl:latest
+
+RUN SYSROOT=$(aarch64-linux-musl-gcc --print-sysroot) && \
+    wget -q https://www.sqlite.org/2024/sqlite-autoconf-3460100.tar.gz && \
+    tar xzf sqlite-autoconf-3460100.tar.gz && \
+    cd sqlite-autoconf-3460100 && \
+    CC=aarch64-linux-musl-gcc ./configure --host=aarch64-linux-musl --enable-static --disable-shared --prefix=$SYSROOT/usr && \
+    make -j$(nproc) && \
+    make install && \
+    cd / && rm -rf sqlite-autoconf-3460100*

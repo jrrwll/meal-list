@@ -37,41 +37,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libsqlite3-dev
 
-      - name: Install zig
-        if: contains(matrix.target, 'aarch64') && runner.os == 'Linux'
-        run: |
-          curl -sL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | sudo tar xJ -C /usr/local
-          echo "/usr/local/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
-
-      - name: Create zig wrapper script (aarch64 musl)
+      - name: Install cross
         if: contains(matrix.target, 'aarch64-unknown-linux-musl')
-        run: |
-          sudo tee /usr/local/bin/zig-aarch64-musl > /dev/null << 'EOF'
-          #!/bin/sh
-          exec zig cc -target aarch64-linux-musl -static "$@"
-          EOF
-          sudo chmod +x /usr/local/bin/zig-aarch64-musl
-
-      - name: Build sqlite3 for aarch64 musl
-        if: contains(matrix.target, 'aarch64-unknown-linux-musl')
-        run: |
-          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip -o /tmp/sqlite.zip
-          unzip -q /tmp/sqlite.zip -d /tmp/sqlite
-          cd /tmp/sqlite/sqlite-amalgamation-3460100
-          zig cc -target aarch64-linux-musl -O2 -fPIC -c sqlite3.c -o sqlite3.o
-          zig ar rcs /tmp/libsqlite3.a sqlite3.o
-          echo "SQLITE3_LIB_DIR=/tmp" >> $GITHUB_ENV
-          echo "SQLITE3_INCLUDE_DIR=/tmp/sqlite/sqlite-amalgamation-3460100" >> $GITHUB_ENV
-
-      - name: Set zig as cross-compiler/linker (aarch64 musl)
-        if: contains(matrix.target, 'aarch64-unknown-linux-musl')
-        run: |
-          echo "CC_aarch64_unknown_linux_musl=zig-aarch64-musl" >> $GITHUB_ENV
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=zig-aarch64-musl" >> $GITHUB_ENV
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cross
 
       - name: Build
         run: |
-          cargo build --release --target ${{ matrix.target }}
+          ${{ contains(matrix.target, 'aarch64-unknown-linux-musl') && 'cross' || 'cargo' }} build --release --target ${{ matrix.target }}
           cd target/${{ matrix.target }}/release
           tar czf ../../../${{ matrix.artifact }}.tar.gz meal_list
 
