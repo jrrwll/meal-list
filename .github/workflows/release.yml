@@ -43,6 +43,15 @@ jobs:
           curl -sL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | sudo tar xJ -C /usr/local
           echo "/usr/local/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
 
+      - name: Create zig wrapper script (aarch64 musl)
+        if: contains(matrix.target, 'aarch64-unknown-linux-musl')
+        run: |
+          sudo tee /usr/local/bin/zig-aarch64-musl > /dev/null << 'EOF'
+          #!/bin/sh
+          exec zig cc -target aarch64-linux-musl "$@"
+          EOF
+          sudo chmod +x /usr/local/bin/zig-aarch64-musl
+
       - name: Build sqlite3 for aarch64 musl
         if: contains(matrix.target, 'aarch64-unknown-linux-musl')
         run: |
@@ -57,8 +66,8 @@ jobs:
       - name: Set zig as cross-compiler/linker (aarch64 musl)
         if: contains(matrix.target, 'aarch64-unknown-linux-musl')
         run: |
-          echo "CC_aarch64_unknown_linux_musl=zig cc -target aarch64-linux-musl" >> $GITHUB_ENV
-          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=zig cc -target aarch64-linux-musl" >> $GITHUB_ENV
+          echo "CC_aarch64_unknown_linux_musl=zig-aarch64-musl" >> $GITHUB_ENV
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=zig-aarch64-musl" >> $GITHUB_ENV
 
       - name: Build
         run: |
