@@ -39,18 +39,20 @@ jobs:
 
       - name: Install zig
         if: contains(matrix.target, 'aarch64') && runner.os == 'Linux'
-        uses: ziglang/action-setup@v1
+        run: |
+          curl -sL https://ziglang.org/download/0.13.0/zig-linux-x86_64-0.13.0.tar.xz | sudo tar xJ -C /usr/local
+          echo "/usr/local/zig-linux-x86_64-0.13.0" >> $GITHUB_PATH
 
       - name: Build sqlite3 for aarch64 musl
         if: contains(matrix.target, 'aarch64-unknown-linux-musl')
         run: |
-          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3460000.zip -o /tmp/sqlite.zip
+          curl -sL https://www.sqlite.org/2024/sqlite-amalgamation-3460100.zip -o /tmp/sqlite.zip
           unzip -q /tmp/sqlite.zip -d /tmp/sqlite
-          cd /tmp/sqlite/sqlite-amalgamation-3460000
+          cd /tmp/sqlite/sqlite-amalgamation-3460100
           zig cc -target aarch64-linux-musl -O2 -fPIC -c sqlite3.c -o sqlite3.o
-          ar rcs /tmp/libsqlite3.a sqlite3.o
+          zig ar rcs /tmp/libsqlite3.a sqlite3.o
           echo "SQLITE3_LIB_DIR=/tmp" >> $GITHUB_ENV
-          echo "SQLITE3_INCLUDE_DIR=/tmp/sqlite/sqlite-amalgamation-3460000" >> $GITHUB_ENV
+          echo "SQLITE3_INCLUDE_DIR=/tmp/sqlite/sqlite-amalgamation-3460100" >> $GITHUB_ENV
 
       - name: Set zig as cross-compiler/linker (aarch64 musl)
         if: contains(matrix.target, 'aarch64-unknown-linux-musl')
