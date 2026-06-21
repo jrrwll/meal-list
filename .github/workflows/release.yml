@@ -48,7 +48,7 @@ jobs:
         run: |
           sudo tee /usr/local/bin/zig-aarch64-musl > /dev/null << 'EOF'
           #!/bin/sh
-          exec zig cc -target aarch64-linux-musl "$@"
+          exec zig cc -target aarch64-linux-musl -static "$@"
           EOF
           sudo chmod +x /usr/local/bin/zig-aarch64-musl
 
