@@ -1,7 +1,7 @@
 import type { Component } from 'solid-js';
 import { createSignal } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
-import { settings, setSettings, type Theme } from '../utils/settings';
+import { settings, setSettings, type Theme, type LayoutColumns } from '../utils/settings';
 import PageHeader from '../components/PageHeader';
 
 const SettingsPage: Component = () => {
@@ -12,6 +12,7 @@ const SettingsPage: Component = () => {
   const [localBaseUrlDisable, setLocalBaseUrlDisable] = createSignal(settings().local_base_url_disable);
   const [sEeApiKey, setSEeApiKey] = createSignal(settings().s_ee_api_key);
   const [theme, setTheme] = createSignal<Theme>(settings().theme);
+  const [layoutColumns, setLayoutColumns] = createSignal<LayoutColumns>(settings().layout_columns);
   const [saved, setSaved] = createSignal(false);
 
   const save = (e: Event) => {
@@ -23,6 +24,7 @@ const SettingsPage: Component = () => {
       local_base_url_disable: localBaseUrlDisable(),
       s_ee_api_key: sEeApiKey().trim(),
       theme: theme(),
+      layout_columns: layoutColumns(),
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 1500);
@@ -133,6 +135,34 @@ const SettingsPage: Component = () => {
             </button>
           </div>
         </div>
+
+        <fieldset>
+          <legend class="text-sm font-medium text-neutral-700 dark:text-neutral-200 mb-1.5">
+            布局格数
+          </legend>
+          <div class="flex gap-2">
+            {([1, 2] as const).map((columns) => (
+                <label
+                    class={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm cursor-pointer ${
+                        layoutColumns() === columns
+                            ? 'bg-[#0EA5E9] border-[#0EA5E9] text-white'
+                            : 'bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-600 text-neutral-700 dark:text-neutral-200'
+                    }`}
+                >
+                  <input
+                      type="radio"
+                      name="layout-columns"
+                      value={columns}
+                      checked={layoutColumns() === columns}
+                      onChange={() => setLayoutColumns(columns)}
+                      class="accent-[#0284C7]"
+                  />
+                  {columns} 列
+                </label>
+            ))}
+          </div>
+          <p class="text-xs text-neutral-400 mt-1">每行展示的餐单数量，默认 2 列</p >
+        </fieldset>
 
         <button
           type="submit"

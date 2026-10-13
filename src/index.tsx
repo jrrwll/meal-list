@@ -1,10 +1,14 @@
 /* @refresh reload */
 import './index.css';
-import './api'; // installs fetch mock
 import { render } from 'solid-js/web';
 import 'solid-devtools';
 
 import App from './App';
+
+// installs fetch mock
+if (import.meta.env.DEV && import.meta.env.VITE_MOCK === '1') {
+  await import('./api');
+}
 
 const root = document.getElementById('root');
 

@@ -6,13 +6,14 @@ import { formatDate } from '../utils/format';
 interface Props {
   meal: Meal;
   onClick?: () => void;
+  compact?: boolean;
 }
 
 const MealCard: Component<Props> = (props) => {
   return (
     <div
       onClick={() => props.onClick?.()}
-      class="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
+      class="min-w-0 bg-white dark:bg-neutral-800 rounded-2xl shadow-sm overflow-hidden active:scale-[0.99] transition-transform cursor-pointer"
     >
       <Show when={props.meal.images?.[0]}>
         <div class="w-full aspect-[16/10] overflow-hidden bg-neutral-100 dark:bg-neutral-700">
@@ -25,8 +26,8 @@ const MealCard: Component<Props> = (props) => {
         </div>
       </Show>
       <div class="p-3">
-        <div class="flex items-start justify-between gap-2">
-          <h3 class="font-medium text-base text-neutral-900 dark:text-neutral-50 line-clamp-1 flex-1">
+        <div class={`flex items-start ${props.compact ? 'flex-col gap-1' : 'justify-between gap-2'}`}>
+          <h3 class="min-w-0 max-w-full font-medium text-base text-neutral-900 dark:text-neutral-50 line-clamp-1 flex-1">
             {props.meal.name}
           </h3>
           <time class="text-xs text-neutral-500 shrink-0">{formatDate(props.meal.ctime)}</time>
@@ -35,7 +36,7 @@ const MealCard: Component<Props> = (props) => {
           <div class="flex flex-wrap gap-1.5 mt-2">
             <For each={props.meal.tags}>
               {(t) => (
-                <span class="text-xs px-2 py-0.5 rounded-full bg-[#E0F2FE] text-[#0369A1] dark:bg-[#082F49] dark:text-[#7DD3FC]">
+                  <span class="max-w-full wrap-break-word text-xs px-2 py-0.5 rounded-full bg-[#E0F2FE] text-[#0369A1] dark:bg-[#082F49] dark:text-[#7DD3FC]">
                   {t}
                 </span>
               )}

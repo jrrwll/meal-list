@@ -2,21 +2,6 @@
 // Import this once at app entry to enable mocked APIs in development.
 
 import { handle, MOCK_PATHS } from './mock';
-import { settings } from '../utils/settings';
-import { localAvailable } from '../utils/local';
-
-function shouldMock(url: string): boolean {
-  const s = settings();
-  // base_url is disabled and no local available → mock
-  if (s.base_url_disable && !localAvailable()) {
-    return MOCK_PATHS.some((p) => url.includes(p));
-  }
-  // local is available → skip mock
-  if (localAvailable()) return false;
-  // base_url is set → skip mock
-  if (s.base_url) return false;
-  return MOCK_PATHS.some((p) => url.includes(p));
-}
 
 function installMockFetch() {
   if (typeof window === 'undefined') return;
@@ -34,8 +19,8 @@ function installMockFetch() {
           ? input.toString()
           : input.url;
 
-    if (!shouldMock(url)) {
-      return realFetch(input as any, init);
+    if (!MOCK_PATHS.some((path) => url.includes(path))) {
+      return realFetch(input, init);
     }
 
     // Merge init from Request object if needed

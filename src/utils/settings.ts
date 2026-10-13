@@ -1,6 +1,7 @@
 import { createSignal } from 'solid-js';
 
 export type Theme = 'light' | 'dark';
+export type LayoutColumns = 1 | 2;
 
 export interface Settings {
   base_url: string;
@@ -9,6 +10,7 @@ export interface Settings {
   local_base_url_disable: boolean;
   s_ee_api_key: string;
   theme: Theme;
+  layout_columns: LayoutColumns;
 }
 
 const STORAGE_KEY = 'meal-list-settings';
@@ -20,6 +22,7 @@ const DEFAULTS: Settings = {
   local_base_url_disable: false,
   s_ee_api_key: '',
   theme: 'light',
+  layout_columns: 2,
 };
 
 function load(): Settings {
